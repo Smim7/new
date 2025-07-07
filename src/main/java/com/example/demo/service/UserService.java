@@ -15,11 +15,14 @@ public class UserService {
     private final UserRepository userRepository;
     private final BCryptPasswordEncoder bCryptPasswordEncoder;
     private final AuthenticationManager authenticationManager;
+    private final jwtService jwtService;
 
-    public UserService(UserRepository userRepository, BCryptPasswordEncoder bCryptPasswordEncoder, AuthenticationManager authenticationManager) {
+    public UserService(UserRepository userRepository, BCryptPasswordEncoder bCryptPasswordEncoder, AuthenticationManager authenticationManager, jwtService jwtService, jwtService jj) {
         this.userRepository = userRepository;
         this.bCryptPasswordEncoder = bCryptPasswordEncoder;
         this.authenticationManager = authenticationManager;
+
+        this.jwtService = jwtService;
     }
     public User register(User user){
         user.setPassword(bCryptPasswordEncoder
@@ -33,7 +36,8 @@ public class UserService {
                         user.getUsername(), user.getPassword()));
        // var u= userRepository.findUserByUsername(user.getUsername());
       if (authenticate.isAuthenticated()){
-          return "123456789";}
+          return jwtService.generateToken(user);
+      }
       else
           return "Fail";
     }
