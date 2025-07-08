@@ -1,19 +1,18 @@
 package com.example.demo.service;
 
 import com.example.demo.entity.User;
-import io.jsonwebtoken.Jwt;
+import io.jsonwebtoken.Claims;
 import io.jsonwebtoken.Jwts;
 import io.jsonwebtoken.io.Decoders;
 import io.jsonwebtoken.security.Keys;
-import org.springframework.boot.autoconfigure.security.oauth2.resource.OAuth2ResourceServerProperties;
+import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.stereotype.Service;
 
 import javax.crypto.SecretKey;
-import java.security.Key;
-import java.util.Base64;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.function.Function;
 
 @Service
 public class jwtService {
@@ -44,5 +43,32 @@ public class jwtService {
     }
     public String getSecretKey() {
         return secretKey="f9f1171cee35f3db32b509fc3b4b3ef9f812bc2d693311ce33d6b4e2e84fc817ffd63ca037b7718150630e8ce3202393b";
+    }
+
+    public String extractUserName(String token) {
+        return extraClaims(token, Claims :: getSubject);
+    }
+
+    private <T>  T extraClaims(String token, Function<Claims, T> claimResolver) {
+        Claims claims=extractClaims(token);
+        return claimResolver.apply(claims);
+
+    }    private Claims extractClaims(String token) {
+      return
+              Jwts.parser().verifyWith(generateKey())
+                .build()
+                .parseSignedClaims(token)
+                .getPayload();
+    }
+
+    public boolean isTokenValid(String token, UserDetails userDetails) {
+        final String userName=extractUserName(token);
+        return(userName.equals(userDetails.getUsername()) && !isTokenValid(token));
+    }
+    private boolean isTokenValid(String token) {
+        return  extractExpiration(token).before(new Date());
+    }
+    private Date extractExpiration(String token) {
+        return extraClaims(token, Claims :: getExpiration);
     }
 }
